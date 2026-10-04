@@ -1,0 +1,246 @@
+# ============================================================================
+# Mingyeol CHZZK API - 읽기 전용 전체 예제
+# ============================================================================
+# 필요한 플러그인:
+#   1. Paper 1.21.x
+#   2. Skript 2.10.2 이상
+#   3. MingyeolChzzkApi
+#
+# 파일 위치 예시:
+#   plugins/Skript/scripts/chzzk-readonly-examples.sk
+#
+# 적용 명령어:
+#   /sk reload chzzk-readonly-examples
+#
+# 주의:
+#   - OAuth 토큰, Client Secret, 스트림키는 Skript 변수에 저장되지 않습니다.
+#   - 조회는 비동기로 실행됩니다. chzzk_refresh_status 직후에는 이전 캐시값이
+#     잠시 보일 수 있으므로, 결과를 즉시 써야 할 때는 약간 기다리세요.
+#   - 이 예제는 조회 전용입니다. 설정 변경, 채팅 전송, 활동 제한 변경은 없습니다.
+# ============================================================================
+
+options:
+    chzzk-prefix: &8[&2치지직&8] &f
+
+
+# ============================================================================
+# 1. 애드온에서 제공하는 기본 문법 요약
+# ============================================================================
+
+# [효과: 실행하는 문법]
+# chzzk_link <player>
+#   - 해당 플레이어의 치지직 계정 연동을 시작합니다.
+#
+# chzzk_refresh_status <player>
+#   - 해당 플레이어의 구독/팔로우 상태를 비동기로 다시 조회합니다.
+#
+# chzzk_refresh_owner_data
+#   - 방송자 채널의 모든 허용된 조회 데이터를 비동기로 갱신합니다.
+#
+# [표현식: 값을 가져오는 문법]
+# chzzk subscriber status of <player>  -> boolean (true/false)
+# chzzk subscriber of <player>         -> 위 문법의 짧은 별칭
+# chzzk follower status of <player>    -> boolean (true/false)
+# chzzk follower of <player>           -> 위 문법의 짧은 별칭
+# chzzk subscriber tier of <player>    -> text (값이 없으면 미설정)
+# chzzk subscriber months of <player>  -> number (값이 없으면 미설정)
+# chzzk owner read json <resource>      -> text (해당 조회 결과의 JSON 원문)
+#
+# <resource>에 사용할 수 있는 값:
+# channel, managers, followers, subscribers,
+# live-settings, chat-settings, restrictions
+
+
+# ============================================================================
+# 2. 내 치지직 연동/구독/팔로우 상태 확인
+# ============================================================================
+
+command /치지직정보:
+    trigger:
+        set {_uuid} to uuid of player
+
+        # 계정 연동이 안 되어 있으면 조회할 치지직 채널 ID가 없습니다.
+        if {chzzk_linked::%{_uuid}%} is not true:
+            send "{@chzzk-prefix}&c치지직 계정이 연동되어 있지 않습니다." to player
+            send "{@chzzk-prefix}&e/연동 치지직 &f명령어로 먼저 연동하세요." to player
+            stop
+
+        # 아래 값은 연동 완료 시 저장됩니다.
+        send "&8&m--------------------------------" to player
+        send "{@chzzk-prefix}&7채널명: &f%{chzzk_channel_name::%{_uuid}%}%" to player
+        send "{@chzzk-prefix}&7채널 ID: &f%{chzzk_channel_id::%{_uuid}%}%" to player
+
+        # 애드온의 boolean 표현식을 변수에 담아서 검사합니다.
+        set {_subscriber} to chzzk subscriber status of player
+        set {_follower} to chzzk follower status of player
+
+        if {_subscriber} is true:
+            send "{@chzzk-prefix}&7구독 여부: &a구독 중" to player
+
+            # 티어/개월 수는 API 응답에 값이 없으면 set되지 않을 수 있습니다.
+            set {_tier} to chzzk subscriber tier of player
+            set {_months} to chzzk subscriber months of player
+            if {_tier} is set:
+                send "{@chzzk-prefix}&7구독 티어: &f%{_tier}%" to player
+            if {_months} is set:
+                send "{@chzzk-prefix}&7구독 개월 수: &f%{_months}%개월" to player
+        else:
+            send "{@chzzk-prefix}&7구독 여부: &c구독 아님" to player
+
+        if {_follower} is true:
+            send "{@chzzk-prefix}&7팔로우 여부: &a팔로우 중" to player
+        else:
+            send "{@chzzk-prefix}&7팔로우 여부: &c팔로우 아님" to player
+
+        # 마지막 정상 동기화 시간은 ISO 형식 문자열로 저장됩니다.
+        if {chzzk_status_updated_at::%{_uuid}%} is set:
+            send "{@chzzk-prefix}&7마지막 조회: &f%{chzzk_status_updated_at::%{_uuid}%}%" to player
+        send "&8&m--------------------------------" to player
+
+
+# ============================================================================
+# 3. 내 상태를 수동으로 갱신
+# ============================================================================
+
+command /치지직갱신:
+    cooldown: 10 seconds
+    cooldown message: {@chzzk-prefix}&c10초에 한 번만 갱신할 수 있습니다.
+    trigger:
+        if {chzzk_linked::%uuid of player%} is not true:
+            send "{@chzzk-prefix}&c먼저 /연동 치지직을 실행하세요." to player
+            stop
+
+        # 실제 HTTP 조회는 별도 스레드에서 실행되므로 서버 틱을 막지 않습니다.
+        chzzk_refresh_status player
+        send "{@chzzk-prefix}&e최신 구독/팔로우 상태를 요청했습니다." to player
+        send "{@chzzk-prefix}&7잠시 뒤 /치지직정보로 확인하세요." to player
+
+
+# ============================================================================
+# 4. 구독자/팔로워 차등 보상 예제
+# ============================================================================
+
+command /치지직보상:
+    trigger:
+        set {_uuid} to uuid of player
+
+        if {chzzk_linked::%{_uuid}%} is not true:
+            send "{@chzzk-prefix}&c치지직 계정을 먼저 연동하세요." to player
+            stop
+
+        # 중복 지급 방지 예시: 마지막 지급 후 24시간이 지나야 다시 받을 수 있습니다.
+        if {chzzk_reward_time::%{_uuid}%} is set:
+            if difference between now and {chzzk_reward_time::%{_uuid}%} is less than 24 hours:
+                send "{@chzzk-prefix}&c오늘 보상을 이미 받았습니다." to player
+                stop
+
+        set {_subscriber} to chzzk subscriber status of player
+        set {_follower} to chzzk follower status of player
+
+        # 기본 보상
+        set {_diamonds} to 1
+
+        # 팔로워면 +1, 구독자면 추가 +2 예시입니다.
+        if {_follower} is true:
+            add 1 to {_diamonds}
+        if {_subscriber} is true:
+            add 2 to {_diamonds}
+
+        give {_diamonds} of diamond to player
+        set {chzzk_reward_time::%{_uuid}%} to now
+        send "{@chzzk-prefix}&a다이아몬드 %{_diamonds}%개를 받았습니다." to player
+
+
+# ============================================================================
+# 5. 플레이어 접속 시 최신 상태 요청
+# ============================================================================
+
+on join:
+    # 플러그인 자체도 설정 주기마다 온라인 플레이어를 자동 갱신합니다.
+    # 이 코드는 접속 직후에도 한 번 갱신하고 싶을 때 사용하는 예시입니다.
+    if {chzzk_linked::%uuid of player%} is true:
+        wait 2 seconds
+        chzzk_refresh_status player
+
+
+# ============================================================================
+# 6. 방송자 채널의 읽기 데이터 전체 갱신 (운영자 전용)
+# ============================================================================
+
+command /치지직조회갱신:
+    permission: mingyeol.chzzk.admin
+    permission message: &c이 명령어를 사용할 권한이 없습니다.
+    trigger:
+        # 다음 리소스를 모두 비동기로 조회합니다:
+        # channel / managers / followers / subscribers /
+        # live-settings / chat-settings / restrictions
+        chzzk_refresh_owner_data
+        send "{@chzzk-prefix}&a방송자 조회 데이터 갱신을 요청했습니다." to sender
+        send "{@chzzk-prefix}&7API 응답 후 Skript 변수에 저장됩니다." to sender
+
+
+# ============================================================================
+# 7. 방송자 조회 결과 확인 (운영자 디버그용)
+# ============================================================================
+
+command /치지직조회 <text>:
+    permission: mingyeol.chzzk.admin
+    permission message: &c이 명령어를 사용할 권한이 없습니다.
+    trigger:
+        set {_resource} to arg-1
+
+        # 임의의 API 경로는 허용하지 않고 아래 7개 이름만 허용합니다.
+        if {_resource} is not "channel" and {_resource} is not "managers" and {_resource} is not "followers" and {_resource} is not "subscribers" and {_resource} is not "live-settings" and {_resource} is not "chat-settings" and {_resource} is not "restrictions":
+            send "{@chzzk-prefix}&e사용법: /치지직조회 <리소스>" to sender
+            send "{@chzzk-prefix}&7channel, managers, followers, subscribers," to sender
+            send "{@chzzk-prefix}&7live-settings, chat-settings, restrictions" to sender
+            stop
+
+        # JSON 표현식은 API의 원본 조회 결과를 문자열로 반환합니다.
+        set {_json} to chzzk owner read json {_resource}
+        if {_json} is not set:
+            send "{@chzzk-prefix}&c저장된 데이터가 없습니다." to sender
+            send "{@chzzk-prefix}&e먼저 /치지직조회갱신을 실행하세요." to sender
+            stop
+
+        send "{@chzzk-prefix}&7리소스: &f%{_resource}%" to sender
+        send "{@chzzk-prefix}&7마지막 갱신: &f%{chzzk_read::%{_resource}%::updated_at}%" to sender
+        send "{@chzzk-prefix}&7JSON: &f%{_json}%" to sender
+
+
+# ============================================================================
+# 8. Skript에 자동 저장되는 변수 목록
+# ============================================================================
+#
+# 플레이어별 변수 (<uuid> = uuid of player):
+#   {chzzk_linked::<uuid>}             = 연동 여부 (boolean)
+#   {chzzk_channel_id::<uuid>}         = 연동한 치지직 채널 ID
+#   {chzzk_channel_name::<uuid>}       = 연동한 치지직 채널명
+#   {chzzk_subscriber::<uuid>}         = 방송자 채널 구독 여부
+#   {chzzk_subscriber_tier::<uuid>}    = 구독 티어
+#   {chzzk_subscriber_months::<uuid>}  = 구독 개월 수
+#   {chzzk_follower::<uuid>}           = 방송자 채널 팔로우 여부
+#   {chzzk_status_updated_at::<uuid>}  = 마지막 정상 조회 시각
+#
+# 방송자 조회 변수 (<resource> = 아래 7개 리소스 중 하나):
+#   {chzzk_read::<resource>::channel_id}
+#   {chzzk_read::<resource>::channel_name}
+#   {chzzk_read::<resource>::updated_at}
+#   {chzzk_read::<resource>::data::*}  = JSON을 재귀적으로 펼친 값
+#   {chzzk_read_json::<resource>}      = JSON 원문 문자열
+#
+# 가능한 resource:
+#   channel
+#   managers
+#   followers
+#   subscribers
+#   live-settings
+#   chat-settings
+#   restrictions
+#
+# 예시로 특정 응답 필드에 직접 접근하려면:
+#   send "%{chzzk_read::channel::data::필드이름}%" to player
+#
+# 실제 필드 이름과 중첩 구조는 치지직 API 응답에 따라 달라질 수 있으므로,
+# 먼저 /치지직조회 <resource>로 JSON 원문을 확인하는 것이 편합니다.
+# ============================================================================

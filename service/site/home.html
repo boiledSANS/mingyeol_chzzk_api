@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DungGeunMo&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#7fc4f0;
+    --sky-bottom:#bfe6ff;
+    --grass:#5b9a3c;
+    --grass-dark:#3f7a2b;
+    --panel:#c6c6c6;
+    --panel-dark:#8b8b8b;
+    --panel-light:#ffffff;
+    --diamond:#5be3d0;
+    --diamond-dark:#2fae9c;
+    --gold:#ffd23f;
+    --gold-dark:#b5811a;
+    --ink:#2b2b2b;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    font-family:'DungGeunMo','Press Start 2P',monospace;
+    color:var(--ink);
+    overflow:hidden;
+  }
+
+  body{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 55%,#d8f0ff 100%);
+  }
+
+  .cloud{
+    position:absolute;
+    background:#ffffff;
+    opacity:.9;
+    box-shadow:
+      16px 0 0 0 #fff,
+      32px 0 0 0 #fff,
+      16px -12px 0 0 #fff,
+      32px -12px 0 0 #fff;
+    width:16px;height:12px;
+  }
+  .cloud1{ top:8%; left:6%; transform:scale(1.6); animation: drift 60s linear infinite; }
+  .cloud2{ top:14%; right:10%; transform:scale(1.1); animation: drift 80s linear infinite reverse; }
+  .cloud3{ top:20%; left:42%; transform:scale(1.3); animation: drift 100s linear infinite; }
+  @keyframes drift{
+    from{ margin-left:0; }
+    to{ margin-left:-120vw; }
+  }
+
+  .sun{
+    position:absolute;
+    top:9%; left:12%;
+    width:46px;height:46px;
+    background:var(--gold);
+    box-shadow:
+      inset 4px 4px 0 0 rgba(255,255,255,.5),
+      inset -4px -4px 0 0 rgba(0,0,0,.1);
+  }
+
+  .terrain{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:22vh;
+    background: repeating-linear-gradient(90deg, var(--grass) 0 40px, var(--grass-dark) 40px 44px);
+  }
+  .terrain::before{
+    content:"";
+    position:absolute;
+    top:-14px; left:0; right:0; height:14px;
+    background: repeating-linear-gradient(90deg, var(--grass) 0 40px, var(--grass-dark) 40px 44px);
+    clip-path: polygon(0 100%, 0 40%, 10px 40%, 10px 0, 20px 0, 20px 40%, 30px 40%, 30px 0, 44px 0, 44px 40%, 54px 40%, 54px 0, 64px 0, 64px 40%, 74px 40%, 74px 0, 88px 0, 88px 40%, 98px 40%, 98px 0, 108px 0,108px 40%,100% 40%,100% 100%);
+  }
+
+  /* small tree silhouettes on the terrain */
+  .tree{
+    position:absolute;
+    bottom:20vh;
+    width:28px;
+  }
+  .tree .trunk{
+    width:8px;height:14px;
+    background:#6b4423;
+    margin:0 auto;
+  }
+  .tree .leaves{
+    width:28px;height:22px;
+    background:var(--grass-dark);
+    box-shadow: inset 2px 2px 0 0 rgba(255,255,255,.15);
+  }
+  .tree1{ left:8%; transform:scale(1.1); }
+  .tree2{ right:10%; transform:scale(.9); }
+
+  .panel{
+    position:relative;
+    z-index:5;
+    width:min(90vw, 460px);
+    padding:40px 26px 30px;
+    background:var(--panel);
+    border:6px solid var(--panel-dark);
+    box-shadow:
+      inset 3px 3px 0 0 var(--panel-light),
+      inset -3px -3px 0 0 var(--panel-dark),
+      0 10px 0 0 rgba(0,0,0,.15),
+      0 0 0 6px #3a3a38;
+    text-align:center;
+    animation: pop-in .5s steps(6) both;
+  }
+  @keyframes pop-in{
+    0%{ transform: scale(.7); opacity:0; }
+    100%{ transform: scale(1); opacity:1; }
+  }
+
+  .badge{
+    width:88px;height:88px;
+    margin:-72px auto 16px;
+    background:var(--diamond);
+    border:5px solid var(--diamond-dark);
+    box-shadow:
+      inset 3px 3px 0 0 rgba(255,255,255,.6),
+      inset -3px -3px 0 0 rgba(0,0,0,.2),
+      0 6px 0 0 rgba(0,0,0,.2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    animation: badge-bounce .6s .1s steps(8) both;
+  }
+  @keyframes badge-bounce{
+    0%{ transform: translateY(-30px) scale(.5); opacity:0;}
+    60%{ transform: translateY(4px) scale(1.05); opacity:1;}
+    100%{ transform: translateY(0) scale(1);}
+  }
+  .badge svg{ width:46px; height:46px; }
+
+  .brand{
+    font-family:'Press Start 2P',monospace;
+    font-size: clamp(16px, 4.4vw, 22px);
+    line-height:1.7;
+    color:#2f5d1f;
+    text-shadow: 2px 2px 0 rgba(255,255,255,.5);
+    margin: 6px 0 10px;
+    letter-spacing:1px;
+  }
+
+  .tagline{
+    font-family:'DungGeunMo','Press Start 2P',monospace;
+    font-size: clamp(13px, 3.4vw, 15px);
+    color:#4a4a46;
+    line-height:1.8;
+    margin: 0 0 26px;
+  }
+
+  .divider{
+    height:4px;
+    margin: 0 0 22px;
+    background: repeating-linear-gradient(90deg, var(--panel-dark) 0 8px, transparent 8px 16px);
+    opacity:.6;
+  }
+
+  .cta{
+    display:block;
+    width:100%;
+    font-family:'Press Start 2P',monospace;
+    font-size:14px;
+    color:#4a2600;
+    background:var(--gold);
+    border:3px solid var(--gold-dark);
+    box-shadow:
+      inset 2px 2px 0 0 rgba(255,255,255,.5),
+      inset -2px -2px 0 0 rgba(0,0,0,.2);
+    padding:16px 14px;
+    cursor:pointer;
+    line-height:1.6;
+  }
+  .cta:active{ transform: translateY(2px); box-shadow:none; }
+
+  .status{
+    margin-top:14px;
+    font-size:12px;
+    color:#4a7a2f;
+  }
+  .status.linked::before{
+    content:"● ";
+  }
+
+  .footer-links{
+    margin-top:26px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .footer-links button{
+    font-family:'DungGeunMo','Press Start 2P',monospace;
+    font-size:12px;
+    color:#3a3a38;
+    background:#d9d9d6;
+    border:2px solid var(--panel-dark);
+    box-shadow:
+      inset 1px 1px 0 0 var(--panel-light),
+      inset -1px -1px 0 0 var(--panel-dark);
+    padding:6px 10px;
+    cursor:pointer;
+    transition: transform .05s ease;
+  }
+  .footer-links button:hover{ background:#e8e8e5; }
+  .footer-links button:active{ transform: translateY(2px); box-shadow:none; }
+  .footer-links span{ color:#8a8a86; align-self:center; font-size:11px; }
+
+  @media (max-width:420px){
+    .panel{ padding:36px 18px 24px; }
+    .brand{ font-size:15px; }
+    .tagline{ font-size:12px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="sun"></div>
+  <div class="cloud cloud1"></div>
+  <div class="cloud cloud2"></div>
+  <div class="cloud cloud3"></div>
+
+  <div class="tree tree1"><div class="leaves"></div><div class="trunk"></div></div>
+  <div class="tree tree2"><div class="leaves"></div><div class="trunk"></div></div>
+
+  <div class="panel">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L3 7v5c0 5.5 3.8 9.7 9 11 5.2-1.3 9-5.5 9-11V7l-9-5z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="brand">[mingyeol API]</div>
+    <div class="tagline">계정을 연동하고<br>서비스를 바로 시작해 보세요.</div>
+
+    <div class="footer-links">
+      <button type="button" onclick="location.href='/terms'">이용약관</button>
+      <span>|</span>
+      <button type="button" onclick="location.href='/privacy'">개인정보 처리방침</button>
+    </div>
+  </div>
+
+  <div class="terrain"></div>
+
+</body>
+</html>

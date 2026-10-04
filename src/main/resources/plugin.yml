@@ -1,0 +1,5 @@
+name: MingyeolChzzkApi
+version: 1.0.0
+main: kr.kimmi.mingyeol.chzzkapi.MingyeolChzzkApiPlugin
+api-version: '1.21'
+depend: [Skript]

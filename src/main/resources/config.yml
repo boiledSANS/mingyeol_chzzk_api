@@ -1,0 +1,13 @@
+# 치지직 OAuth를 처리하는 Node.js 서비스의 공개 주소입니다.
+service-base-url: "https://api.example.com"
+
+# Node 서비스의 PLUGIN_SHARED_SECRET과 동일한 값으로 설정합니다.
+# 이 값은 충분히 긴 랜덤 문자열로 설정하고 공개 저장소에 올리지 마세요.
+service-shared-secret: "PUT_A_LONG_RANDOM_SHARED_SECRET_HERE"
+
+# 연동 시작 후 브라우저 로그인이 완료되기를 기다리는 시간(초)입니다.
+link-expiry-seconds: 300
+
+# 온라인인 연동 유저의 구독/팔로우 상태를 자동으로 다시 읽는 주기(초)입니다.
+# 치지직 조회 API를 과도하게 호출하지 않도록 30초 이상으로 유지합니다.
+status-refresh-seconds: 300
