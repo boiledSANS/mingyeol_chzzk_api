@@ -5,7 +5,7 @@
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://adoptium.net/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 
-치지직(CHZZK) 계정을 Minecraft 계정과 연동하고, 채널의 **구독·팔로우 상태를 Skript에서 사용하기 쉽게** 해주는 Paper 플러그인 + OAuth 백엔드
+치지직(CHZZK) 계정을 Minecraft 계정과 연동하고, 채널의 **구독·팔로우 상태를 Skript에서 사용하기 쉽게** 해주는 Paper 플러그인 + OAuth 백엔드 사실 codex가 거의다 만들어준거라 나도 자세히는 몰라몰라 몰라띠 난 skript한 손코딩하고 플러그인은 발로해버려잇
 
 > [!IMPORTANT]
 > 이 플러그인은 단독으로 동작하지 않는 **[Skript](https://github.com/SkriptLang/Skript) 애드온**입니다.
